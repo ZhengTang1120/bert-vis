@@ -4,6 +4,7 @@ from pytorch_transformers import BertTokenizer, BertModel
 from utils import *
 from collections import defaultdict
 import numpy as np
+import pickle
 
 sentences = list()
 n_words = 0
@@ -48,3 +49,6 @@ if __name__ == '__main__':
     points = umap.UMAP().fit_transform(vecs)
 
     print (len(points), n_words)
+
+    pickle.dump((sentences, n_words, word2id, points), open( "save.p", "wb" ) )
+    # (sentences, n_words, word2id, points) = pickle.load( open( "save.p", "rb" ) )
