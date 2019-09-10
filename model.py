@@ -15,8 +15,8 @@ class SNLIClassifier(nn.Module):
         self.fc = nn.Linear(self.bert.config.hidden_size, num_class)
 
     def forward(self, premise, hypothesis):
-        premise = '[CLS] '+ premise + ' [SEP]'
-        hypothesis = '[CLS] '+ hypothesis + ' [SEP]'
+        premise = '[CLS] '+ premise + ' [SEP] '
+        hypothesis = hypothesis + ' [SEP]'
 
         tokenized_premise = self.tokenizer.tokenize(premise)
         tokenized_hypothesis = self.tokenizer.tokenize(hypothesis)

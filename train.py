@@ -43,10 +43,10 @@ if __name__ == '__main__':
     model = SNLIClassifier(4, device).to(device)
 
     criterion = torch.nn.CrossEntropyLoss().to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=4.0)
+    optimizer = torch.optim.Adam(model.parameters(), lr=1e-5)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, gamma=0.9)
 
-    for epoch in range(10):
+    for epoch in range(100):
 
         start_time = time.time()
 

@@ -20,7 +20,7 @@ if __name__ == '__main__':
     bert.to(device)
     bert.eval()
 
-    for i, (premise, hypothesis, cls) in enumerate(train_set):
+    for i, (premise, hypothesis, cls) in enumerate(dev_set):
         premise = '[CLS] '+ premise + ' [SEP]'
         hypothesis = hypothesis + ' [SEP]'
 
@@ -31,8 +31,8 @@ if __name__ == '__main__':
         tokenized_text = tokenized_premise + tokenized_hypothesis
         sentences.append(tokenized_text)
 
-        for w in tokenized_text:
-            word2id[w].append((n_words, i))
+        for j, w in enumerate(tokenized_text):
+            word2id[w].append((n_words, i, j))
             n_words += 1
 
         indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)

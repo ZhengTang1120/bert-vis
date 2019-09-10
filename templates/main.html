@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+	<style>
+		.node .selected {
+		  fill: red;
+		  r: 5;
+		}
+		table {
+			border-style: solid;
+		}
+	</style>
+	<title>BERT_VIS</title>
+	<script src="https://d3js.org/d3.v4.min.js"></script>
+	<script type="text/javascript"
+         src="{{ url_for('static', filename='scores.js') }}"></script>
+</head>
+<body>
+	<div id="main_div">
+	<form method="POST">
+    <input name="text">
+    <input type="submit">
+	</form>
+	</div>
+	<script type="text/javascript"
+         src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
