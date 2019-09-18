@@ -61,4 +61,6 @@ if __name__ == '__main__':
         print(f'\tLoss: {train_loss:.4f}(train)\t|\tAcc: {train_acc * 100:.1f}%(train)')
         print(f'\tLoss: {valid_loss:.4f}(valid)\t|\tAcc: {valid_acc * 100:.1f}%(valid)')
 
+        torch.save(model, "model %d"%(epoch + 1))
+
     

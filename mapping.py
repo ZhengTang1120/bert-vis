@@ -5,6 +5,7 @@ from utils import *
 from collections import defaultdict
 import numpy as np
 import pickle
+import argparse
 
 sentences = list()
 n_words = 0
@@ -12,11 +13,19 @@ word2id = defaultdict(list)
 
 if __name__ == '__main__':
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('model')
+    args = parser.parse_args()
+
     train_set = prepare_jldata("snli_1.0/snli_1.0_train.jsonl")
     dev_set = prepare_jldata("snli_1.0/snli_1.0_dev.jsonl")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-    bert = BertModel.from_pretrained('bert-base-uncased')
+    if model:
+        model = torch.load(args.model)
+        bert = model.bert
+    else:
+        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        bert = BertModel.from_pretrained('bert-base-uncased')
     bert.to(device)
     bert.eval()
 

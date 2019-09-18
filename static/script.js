@@ -1,11 +1,11 @@
-var x_scale = d3.scaleLinear().domain([-11, 4]).range([25, 800]);
-var y_scale = d3.scaleLinear().domain([-9, 9]).range([800, 25]);
+var x_scale = d3.scaleLinear().domain([x0, x1]).range([25, 800]);
+var y_scale = d3.scaleLinear().domain([y0, y1]).range([800, 25]);
 
 div = d3.select("#main_div").append("div");
-
 var s1 = div.append("svg").attr("id", "scatterplot_1").attr("height", 825).attr("width", 825);
 var enter_s1 = s1.append("g").attr("class", "node").selectAll("circle").data(scores).enter().append("circle");
 enter_s1.attr("cx", function(d) {
+    console.log(d.X);
     return x_scale(d.X);
 });
 enter_s1.attr("cy", function(d) {
