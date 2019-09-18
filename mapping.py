@@ -25,6 +25,7 @@ if __name__ == '__main__':
         print ("1")
         model = torch.load(args.model)
         bert = model.bert
+        tokenizer = model.tokenizer
     else:
         print ("2")
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
