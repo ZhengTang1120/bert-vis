@@ -21,9 +21,11 @@ if __name__ == '__main__':
     dev_set = prepare_jldata("snli_1.0/snli_1.0_dev.jsonl")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     if args.model:
+        print ("1")
         model = torch.load(args.model)
         bert = model.bert
     else:
+        print ("2")
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
         bert = BertModel.from_pretrained('bert-base-uncased')
     bert.to(device)
