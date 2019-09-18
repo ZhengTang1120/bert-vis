@@ -14,7 +14,7 @@ word2id = defaultdict(list)
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('model', default=None)
+    parser.add_argument('--model', nargs='?')
     args = parser.parse_args()
 
     train_set = prepare_jldata("snli_1.0/snli_1.0_train.jsonl")
