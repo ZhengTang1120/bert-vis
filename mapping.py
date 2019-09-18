@@ -55,9 +55,9 @@ if __name__ == '__main__':
         segments_tensors = torch.tensor([segments_ids]).to(device)
         bert_output = bert(tokens_tensor, token_type_ids=segments_tensors)
         if i == 0:
-            vecs = bert_output[0].data.numpy()[0]
+            vecs = bert_output[0].data.cpu().numpy()[0]
         else:
-            vecs = np.concatenate((vecs, bert_output[0].data.numpy()[0]), axis=0)
+            vecs = np.concatenate((vecs, bert_output[0].data.cpu().numpy()[0]), axis=0)
 
     points = umap.UMAP().fit_transform(vecs)
 
