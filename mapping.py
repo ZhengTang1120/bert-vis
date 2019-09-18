@@ -15,6 +15,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model', nargs='?')
+    parser.add_argument('output')
     args = parser.parse_args()
 
     train_set = prepare_jldata("snli_1.0/snli_1.0_train.jsonl")
@@ -61,5 +62,5 @@ if __name__ == '__main__':
 
     print (len(points), n_words)
 
-    pickle.dump((sentences, n_words, word2id, points), open( "save.p", "wb" ) )
+    pickle.dump((sentences, n_words, word2id, points), open( args.output, "wb" ) )
     # (sentences, n_words, word2id, points) = pickle.load( open( "save.p", "rb" ) )
