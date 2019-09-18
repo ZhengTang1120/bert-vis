@@ -14,13 +14,13 @@ word2id = defaultdict(list)
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('model')
+    parser.add_argument('model', default=None)
     args = parser.parse_args()
 
     train_set = prepare_jldata("snli_1.0/snli_1.0_train.jsonl")
     dev_set = prepare_jldata("snli_1.0/snli_1.0_dev.jsonl")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    if model:
+    if args.model:
         model = torch.load(args.model)
         bert = model.bert
     else:
