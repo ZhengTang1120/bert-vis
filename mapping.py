@@ -5,6 +5,7 @@ from utils import *
 from collections import defaultdict
 import numpy as np
 import pickle
+from random import sample
 import argparse
 
 sentences = list()
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     bert.to(device)
     bert.eval()
 
-    for i, (premise, hypothesis, cls) in enumerate(dev_set):
+    for i, (premise, hypothesis, cls) in enumerate(sample(train_set, 100000)):
         premise = '[CLS] '+ premise + ' [SEP]'
         hypothesis = hypothesis + ' [SEP]'
 
