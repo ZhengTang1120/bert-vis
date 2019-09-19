@@ -34,7 +34,7 @@ if __name__ == '__main__':
     bert.to(device)
     bert.eval()
 
-    for i, (premise, hypothesis, cls) in enumerate(sample(train_set, 20000)):
+    for i, (premise, hypothesis, cls) in enumerate(sample(train_set, 10000)):
         premise = '[CLS] '+ premise + ' [SEP]'
         hypothesis = hypothesis + ' [SEP]'
 
