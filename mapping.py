@@ -8,6 +8,8 @@ import pickle
 from random import sample
 import argparse
 
+from sklearn.cluster import AffinityPropagation
+
 sentences = list()
 n_words = 0
 word2id = defaultdict(list)
@@ -59,10 +61,30 @@ if __name__ == '__main__':
             vecs = bert_output[0].data.cpu().numpy()[0]
         else:
             vecs = np.concatenate((vecs, bert_output[0].data.cpu().numpy()[0]), axis=0)
-
+    print ("finish")
     points = umap.UMAP().fit_transform(vecs)
 
     print (len(points), n_words)
 
-    pickle.dump((sentences, n_words, word2id, points), open( args.output, "wb" ) )
+    pickle.dump((sentences, n_words, word2id, points, vecs), open( args.output, "wb" ) )
+    for query in word2id:
+        points = list()
+        for eid, sid, wid in word2id[query]:
+            points.append(vecs[eid])
+            sentence = sentences[sid][:]
+            sentence1 = sentence[:wid]
+            sentence2 = sentence[wid+1:]
+
+        af = AffinityPropagation(preference=-50).fit(points)
+        cluster_centers_indices = af.cluster_centers_indices_
+        labels = af.labels_
+        print (cluster_centers_indices, labels)
+
+        # cluster by words, get the centroid
+        # cluster the centroid, find the nearest words
+    points = umap.UMAP().fit_transform(vecs)
+
+    print (len(points), n_words)
+
+    pickle.dump((sentences, n_words, word2id, points, vecs), open( args.output, "wb" ) )
     # (sentences, n_words, word2id, points) = pickle.load( open( "save.p", "rb" ) )
