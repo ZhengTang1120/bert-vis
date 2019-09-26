@@ -4,8 +4,10 @@ import math
 import json
 # from random import sample
 
-(sentences, n_words, word2id, points) = pickle.load( open( 'save.p', 'rb' ) )
-(sentences2, n_words2, word2id2, points2) = pickle.load( open( 'save2.p', 'rb' ) )
+from sklearn.cluster import AffinityPropagation
+
+(sentences, n_words, word2id, points, vecs) = pickle.load( open( 'temp.p', 'rb' ) )
+# (sentences2, n_words2, word2id2, points2) = pickle.load( open( 'save2.p', 'rb' ) )
 
 def get_result(query):
     
@@ -33,34 +35,50 @@ def get_result(query):
             "y0": math.floor(min(ys)), "y1": math.ceil(max(ys)),
             "x02": math.floor(min(xs2)), "x12": math.ceil(max(xs2)), 
             "y02": math.floor(min(ys2)), "y12": math.ceil(max(ys2))}
+centers = []
+words = []
+for query in word2id:
+    points = list()
+    for eid, sid, wid in word2id[query]:
+        points.append(vecs[eid])
+        sentence = sentences[sid][:]
+        sentence1 = sentence[:wid]
+        sentence2 = sentence[wid+1:]
 
-for word in word2id:
-    res = get_result(word)
-    with open("static/words/%s.js"%word, "w") as f:
-        f.write("var scores = ")
-        f.write(res["scores"])
-        f.write(";\n")
-        f.write("var x0 = ")
-        f.write(str(res["x0"]))
-        f.write(";\n")
-        f.write("var x1 = ")
-        f.write(str(res["x1"]))
-        f.write(";\n")
-        f.write("var y0 = ")
-        f.write(str(res["y0"]))
-        f.write(";\n")
-        f.write("var y1 = ")
-        f.write(str(res["y1"]))
-        f.write(";\n")
-        f.write("var x02 = ")
-        f.write(str(res["x02"]))
-        f.write(";\n")
-        f.write("var x12 = ")
-        f.write(str(res["x12"]))
-        f.write(";\n")
-        f.write("var y02 = ")
-        f.write(str(res["y02"]))
-        f.write(";\n")
-        f.write("var y12 = ")
-        f.write(str(res["y12"]))
-        f.write(";\n")
+    af = AffinityPropagation(preference=-50).fit(points)
+    cluster_centers_indices = af.cluster_centers_indices_
+    labels = af.labels_
+    centers += [vecs[i] for i in cluster_centers_indices]
+    words += [query for i in cluster_centers_indices]
+
+pickle.dump((words, centers), open( "centers.p", "wb" ) )
+# for word in word2id:
+#     res = get_result(word)
+#     with open("static/words/%s.js"%word, "w") as f:
+#         f.write("var scores = ")
+#         f.write(res["scores"])
+#         f.write(";\n")
+#         f.write("var x0 = ")
+#         f.write(str(res["x0"]))
+#         f.write(";\n")
+#         f.write("var x1 = ")
+#         f.write(str(res["x1"]))
+#         f.write(";\n")
+#         f.write("var y0 = ")
+#         f.write(str(res["y0"]))
+#         f.write(";\n")
+#         f.write("var y1 = ")
+#         f.write(str(res["y1"]))
+#         f.write(";\n")
+#         f.write("var x02 = ")
+#         f.write(str(res["x02"]))
+#         f.write(";\n")
+#         f.write("var x12 = ")
+#         f.write(str(res["x12"]))
+#         f.write(";\n")
+#         f.write("var y02 = ")
+#         f.write(str(res["y02"]))
+#         f.write(";\n")
+#         f.write("var y12 = ")
+#         f.write(str(res["y12"]))
+#         f.write(";\n")
