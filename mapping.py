@@ -39,7 +39,7 @@ if __name__ == '__main__':
         # hypothesis = hypothesis + ' [SEP]'
 
         output = model(premise, hypothesis)
-        print (output.argmax(0).cpu().numpy()[0], cls)
+        print (output.argmax(0).cpu().numpy(), cls)
 
         # tokenized_premise = tokenizer.tokenize(premise)
         # tokenized_hypothesis = tokenizer.tokenize(hypothesis)
