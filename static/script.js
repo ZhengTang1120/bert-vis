@@ -48,12 +48,7 @@ enter_s1.attr("cy", function(d) {
     return y_scale(d.Y);
 });
 enter_s1.attr("r", 3);
-enter_s1.attr("fill", function(d){
-                if (d.pos <= sentences[d.Sentence].indexOf('[SEP]'))
-                    return "black";
-                else
-                    return "white";
-            });
+enter_s1.attr("fill", "grey");
 enter_s1.attr("stroke-width","2");
 
 colorScale = d3.scaleOrdinal(d3.schemeCategory10);
@@ -88,17 +83,16 @@ enter_s2.attr("r", 3);
 enter_s2.attr("stroke-width","2")
 
 enter_s2.attr('stroke', entailmentColor);
-enter_s2.attr("fill", function(d){
-                if (d.pos <= sentences[d.Sentence].indexOf('[SEP]'))
-                    return "black";
-                else
-                    return "white";
-            });
+enter_s2.attr("fill", "grey");
 
 var g_y = s2.append("g").attr("transform", "translate(25,0)").call(d3.axisLeft(y_scale_2).ticks(5));
 var g_x = s2.append("g").attr("transform", "translate(0,475)").call(d3.axisBottom(x_scale_2).ticks(9));
 
 show_TableAndSentence(scores_sample);
+
+// function selectNode(d){
+
+// }
 
 function show_TableAndSentence(sel){
     d3.selectAll("#classed_node").remove();
@@ -175,33 +169,10 @@ function show_TableAndSentence(sel){
             else 
                 return d })
         .on("click", function(d){
-            d3.selectAll("#classed_node").remove();
-            var enter_s1 = s1.append("g").attr("id", "classed_node").selectAll("circle").data(d).enter().append("circle");
-            enter_s1.attr("cx", function(d) {
-                return x_scale(d.X);
-            });
-            enter_s1.attr("cy", function(d) {
-                return y_scale(d.Y);
-            });
-            enter_s1.attr("r", 5);
-
-            enter_s1.attr("stroke-width","3")
-
-            enter_s1.attr('stroke', entailmentColor);
-            enter_s1.attr("fill", "red");
-            var enter_s2 = s2.append("g").attr("id", "classed_node").selectAll("circle").data(d).enter().append("circle");
-            enter_s2.attr("cx", function(d) {
-                return x_scale_2(d.X2);
-            });
-            enter_s2.attr("cy", function(d) {
-                return y_scale_2(d.Y2);
-            });
-            enter_s2.attr("r", 5);
-
-            enter_s2.attr("stroke-width","3")
-
-            enter_s2.attr('stroke', entailmentColor);
-            enter_s2.attr("fill", "red");
+            enter_s1.classed("selected", d && function(e){ return d.includes(e) });
+            enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
+            enter_s2.classed("selected", d && function(e){ return d.includes(e) });
+            enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
         });
     tb.append("tr").selectAll("td").data(clist).enter().append("td")
         .text(function(d, i){ 
@@ -210,33 +181,10 @@ function show_TableAndSentence(sel){
             else 
                 return d })
         .on("click", function(d){
-            d3.selectAll("#classed_node").remove();
-            var enter_s1 = s1.append("g").attr("id", "classed_node").selectAll("circle").data(d).enter().append("circle");
-            enter_s1.attr("cx", function(d) {
-                return x_scale(d.X);
-            });
-            enter_s1.attr("cy", function(d) {
-                return y_scale(d.Y);
-            });
-            enter_s1.attr("r", 5);
-
-            enter_s1.attr("stroke-width","3")
-
-            enter_s1.attr('stroke', entailmentColor);
-            enter_s1.attr("fill", "red");
-            var enter_s2 = s2.append("g").attr("id", "classed_node").selectAll("circle").data(d).enter().append("circle");
-            enter_s2.attr("cx", function(d) {
-                return x_scale_2(d.X2);
-            });
-            enter_s2.attr("cy", function(d) {
-                return y_scale_2(d.Y2);
-            });
-            enter_s2.attr("r", 5);
-
-            enter_s2.attr("stroke-width","3")
-
-            enter_s2.attr('stroke', entailmentColor);
-            enter_s2.attr("fill", "red");
+            enter_s1.classed("selected", d && function(e){ return d.includes(e) });
+            enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
+            enter_s2.classed("selected", d && function(e){ return d.includes(e) });
+            enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
         });
     tb.append("tr").selectAll("td").data(elist).enter().append("td")
         .text(function(d, i){ 
@@ -245,33 +193,10 @@ function show_TableAndSentence(sel){
             else 
                 return d })
         .on("click", function(d){
-            d3.selectAll("#classed_node").remove();
-            var enter_s1 = s1.append("g").attr("id", "classed_node").selectAll("circle").data(d).enter().append("circle");
-            enter_s1.attr("cx", function(d) {
-                return x_scale(d.X);
-            });
-            enter_s1.attr("cy", function(d) {
-                return y_scale(d.Y);
-            });
-            enter_s1.attr("r", 5);
-
-            enter_s1.attr("stroke-width","3")
-
-            enter_s1.attr('stroke', entailmentColor);
-            enter_s1.attr("fill", "red");
-            var enter_s2 = s2.append("g").attr("id", "classed_node").selectAll("circle").data(d).enter().append("circle");
-            enter_s2.attr("cx", function(d) {
-                return x_scale_2(d.X2);
-            });
-            enter_s2.attr("cy", function(d) {
-                return y_scale_2(d.Y2);
-            });
-            enter_s2.attr("r", 5);
-
-            enter_s2.attr("stroke-width","3")
-
-            enter_s2.attr('stroke', entailmentColor);
-            enter_s2.attr("fill", "red");
+            enter_s1.classed("selected", d && function(e){ return d.includes(e) });
+            enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
+            enter_s2.classed("selected", d && function(e){ return d.includes(e) });
+            enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
         });
 
     if (sel.length < 100) {
@@ -411,9 +336,9 @@ var brush_1 = s1.append("g")
         .on("start", start)
         .on("brush end", brushed))
     .on("click", click)
-    // .call(d3.zoom()
-    //     .scaleExtent([1, 8])
-    //     .on("zoom", zoom));;
+    .call(d3.zoom()
+        .scaleExtent([1, 8])
+        .on("zoom", zoom));;
 
 function incircle(p, c) {
     if (Math.pow(p[0] - c[0], 2) + Math.pow(p[1] - c[1], 2) <= 25) {
@@ -490,14 +415,15 @@ var brush_2 = s2.append("g")
 
 function click_2(d) {
     d = d3.mouse(this);
-    enter_s1.classed("selected", d && function(e) {
+    enter_s2.classed("selected", d && function(e) {
         c = [x_scale_2(e.X2), y_scale_2(e.Y2)];
         return incircle(d, c);
     });
-    enter_s2.classed("selected", d && function(e) {
+    enter_s1.classed("selected", d && function(e) {
         c = [x_scale_2(e.X2), y_scale(e.Y2)];
         return incircle(d, c);
     });
+    console.log(d3.selectAll(".selected").size())
     if (d3.selectAll(".selected").size() != 0){
         enter_s1.classed("unselected", d && function(e) {
             c = [x_scale_2(e.X2), y_scale_2(e.Y2)];
@@ -575,12 +501,12 @@ div2.selectAll("button")
         return d.click();
     });
 
-// function zoom() {
-//   enter_s1.attr("transform", transform(d3.event.transform));
-// }
+function zoom() {
+  enter_s1.attr("transform", transform(d3.event.transform));
+}
 
-// function transform(t) {
-//   return function(d) {
-//     return "translate(" + t.apply([x_scale(d.X), y_scale(d.Y)]) + ")";
-//   };
-// }
+function transform(t) {
+  return function(d) {
+    return "translate(" + t.apply([x_scale(d.X), y_scale(d.Y)]) + ")";
+  };
+}
