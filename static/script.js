@@ -1,14 +1,6 @@
-// var scores_cf = crossfilter(scores);
-
-// var x_d = scores_cf.dimension(function(d) { return d.X; });
-// var y_d = scores_cf.dimension(function(d) { return d.Y; });
-// var x2_d = scores_cf.dimension(function(d) { return d.X2; });
-// var y2_d = scores_cf.dimension(function(d) { return d.Y2; });
-// var entailment_d = scores_cf.dimension(function(d) { return d.entailment; });
-// var prediction_d = scores_cf.dimension(function(d) { return d.prediction; });
-
 labels = ["-", "neutral", "contradiction", "entailment"]
-
+var zoomer  = null;
+var zoomer2 = null;
 var seed = 1;
 function random() {
     var x = Math.sin(seed++) * 10000;
@@ -41,15 +33,9 @@ div2 = d3.select("#main_div").append("div").attr("class","plot");
 
 var s1 = div1.append("svg").attr("id", "scatterplot_1").attr("height", 500).attr("width", 500);
 var enter_s1 = s1.append("g").attr("class", "node").selectAll("circle").data(scores_sample).enter().append("circle").each(function(d) { d.svgElement = this; });
-enter_s1.attr("cx", function(d) {
-    return x_scale(d.X);
-});
-enter_s1.attr("cy", function(d) {
-    return y_scale(d.Y);
-});
 enter_s1.attr("r", 3);
-enter_s1.attr("fill", "grey");
 enter_s1.attr("stroke-width","2");
+enter_s1.attr("transform", transform(d3.zoomIdentity));
 
 colorScale = d3.scaleOrdinal(d3.schemeCategory10);
 colorScale(1);
@@ -62,7 +48,8 @@ function predictionColor(d){
     return colorScale(d.prediction);
 };
 
-enter_s1.attr('stroke', entailmentColor);
+enter_s1.attr("fill", entailmentColor);
+// enter_s1.attr('stroke', entailmentColor);
 
 var g_y = s1.append("g").attr("transform", "translate(25,0)").call(d3.axisLeft(y_scale).ticks(5));
 var g_x = s1.append("g").attr("transform", "translate(0,475)").call(d3.axisBottom(x_scale).ticks(5));
@@ -72,27 +59,155 @@ var y_scale_2 = d3.scaleLinear().domain([y02-2, y12+2]).range([475, 25]);
 
 var s2 = div2.append("svg").attr("id", "scatterplot_2").attr("height", 500).attr("width", 500);
 var enter_s2 = s2.append("g").attr("class", "node").selectAll("circle").data(scores_sample).enter().append("circle").each(function(d) { d.svgElement2 = this; });
-enter_s2.attr("cx", function(d) {
-    return x_scale_2(d.X2);
-});
-enter_s2.attr("cy", function(d) {
-    return y_scale_2(d.Y2);
-});
 enter_s2.attr("r", 3);
 
 enter_s2.attr("stroke-width","2")
 
-enter_s2.attr('stroke', entailmentColor);
-enter_s2.attr("fill", "grey");
+// enter_s2.attr('stroke', entailmentColor);
+enter_s2.attr("fill", entailmentColor);
+
+enter_s2.attr("transform", transform2(d3.zoomIdentity));
 
 var g_y = s2.append("g").attr("transform", "translate(25,0)").call(d3.axisLeft(y_scale_2).ticks(5));
 var g_x = s2.append("g").attr("transform", "translate(0,475)").call(d3.axisBottom(x_scale_2).ticks(9));
 
 show_TableAndSentence(scores_sample);
 
-// function selectNode(d){
+function renderSentences(sel){
+    if (sel.length > 10)
+        sel = getRandomSubarray(sel, 10)
+    sel = sel.sort(function(x, y){
+       return d3.ascending(x.entailment, y.entailment);
+    });
+    d3.select("#values").remove();
+    d3.selectAll("#np").remove();
+    var values = d3.select("#main_div").append("div").attr("id", "values");
+    values.attr("style", "height:400px; overflow:auto");
+    var buttonList = [
+        {
+            name: "button1",
+            text: "Entailment",
+            click: function() { 
+                tr.transition().duration(1000).style("background-color", entailmentColor); 
+            }
+        },
+        {
+            name: "button2",
+            text: "Prediction",
+            click: function() { 
+                tr.transition().duration(1000).style("background-color", predictionColor); 
+            }
+        },
+        {
+            name: "button3",
+            text: "Accuracy",
+            click: function() { 
+                tr.transition().duration(1000).style("background-color", function(d){
+                    if (d.prediction === d.entailment){
+                        return 'green'
+                    }else{
+                        return 'red'
+                    }
+                });
+            }
+        }
+    ];
 
-// }
+    values.selectAll("button")
+        .data(buttonList)
+        .enter()
+        .append("button")
+        .attr("id", function(d) { return d.name; })
+        .text(function(d) { return d.text; })
+        .on("click", function(d) {
+            return d.click();
+        });
+    var tb = values.append("table")
+    var clicked = false;
+    var tr = tb.selectAll("tr").data(sel).enter().append("tr").style('background-color', entailmentColor).on("click", function(d){
+        d3.selectAll("#np").remove();
+        if (!clicked){
+            var enter_s1 = s1.append("g").attr("id", "np").selectAll("circle").data(scores.filter(getPoints.bind(this, d.Sentence))).enter().append("circle");
+            enter_s1.attr("cx", function(d) {
+                return x_scale(d.X);
+            });
+            enter_s1.attr("cy", function(d) {
+                return y_scale(d.Y);
+            });
+            enter_s1.attr("r", 9);
+            enter_s1.attr("fill", function(d){
+                if (d.pos <= sentences[d.Sentence].indexOf('[SEP]'))
+                    return "black";
+                else
+                    return "white";
+            });
+            enter_s1.attr("stroke", "black");
+            enter_s1.on("mouseover", function(d){
+                s1.append("text")
+                .attr("id","word")
+                .attr("x", x_scale(d.X))
+                .attr("y", y_scale(d.Y))
+                .attr("dx", "6") // margin
+                .attr("dy", ".35em") // vertical-align
+                .text(sentences[d.Sentence][d.pos].replace("QUERY", ""));
+            });
+            enter_s1.on("mouseleave", function(d){
+                d3.select("#word").remove();
+            });
+            var enter_s2 = s2.append("g").attr("id", "np").selectAll("circle").data(scores.filter(getPoints.bind(this, d.Sentence))).enter().append("circle");
+            enter_s2.attr("cx", function(d) {
+                return x_scale_2(d.X2);
+            });
+            enter_s2.attr("cy", function(d) {
+                return y_scale_2(d.Y2);
+            });
+            enter_s2.attr("r", 9);
+            enter_s2.attr("fill", function(d){
+                if (d.pos <= sentences[d.Sentence].indexOf('[SEP]'))
+                    return "black";
+                else
+                    return "white";
+            });
+            enter_s2.attr("stroke", "black");
+            enter_s2.on("mouseover", function(d){
+                s2.append("text")
+                .attr("id","word")
+                .attr("x", x_scale_2(d.X2))
+                .attr("y", y_scale_2(d.Y2))
+                .attr("dx", "6") // margin
+                .attr("dy", ".35em") // vertical-align
+                .text(sentences[d.Sentence][d.pos].replace("QUERY", ""));
+            });
+            enter_s2.on("mouseleave", function(d){
+                d3.select("#word").remove();
+            });
+            clicked = true;
+        }else
+            clicked = false;
+     });
+
+    var td = tr.append("td").attr("id", function(d) { return d.pos; });
+    td.selectAll("span").data(function(d){
+        var s = sentences[d.Sentence];
+        // s[d.pos] = 'QUERY' + s[d.pos];
+
+        return s.map(function(word, i) {
+            return {
+                word: word,
+                pos: i,
+                selectedPos: d.pos
+            };
+        });
+    }).enter().append("span").text(function(d){
+        return d.word + " ";
+        /*if (d != '[CLS]' && d != '[SEP]')
+            return d.replace('QUERY', '') + ' ';*/
+     }).attr('style', function(d, i){
+        if (d.pos === d.selectedPos)
+        //if (d.includes('QUERY'))
+            return 'color:red'
+     });
+}
 
 function show_TableAndSentence(sel){
     d3.selectAll("#classed_node").remove();
@@ -173,6 +288,7 @@ function show_TableAndSentence(sel){
             enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
             enter_s2.classed("selected", d && function(e){ return d.includes(e) });
             enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
+            renderSentences(s1.selectAll(".selected").data());
         });
     tb.append("tr").selectAll("td").data(clist).enter().append("td")
         .text(function(d, i){ 
@@ -185,6 +301,7 @@ function show_TableAndSentence(sel){
             enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
             enter_s2.classed("selected", d && function(e){ return d.includes(e) });
             enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
+            renderSentences(s1.selectAll(".selected").data());
         });
     tb.append("tr").selectAll("td").data(elist).enter().append("td")
         .text(function(d, i){ 
@@ -197,148 +314,20 @@ function show_TableAndSentence(sel){
             enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
             enter_s2.classed("selected", d && function(e){ return d.includes(e) });
             enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
+            renderSentences(s1.selectAll(".selected").data());
         });
-
-    if (sel.length < 100) {
-        sel = sel.sort(function(x, y){
-           return d3.ascending(x.entailment, y.entailment);
-        });
-        d3.select("#values").remove();
-        d3.selectAll("#np").remove();
-        var values = d3.select("#main_div").append("div").attr("id", "values");
-        var buttonList = [
-            {
-                name: "button1",
-                text: "Entailment",
-                click: function() { 
-                    tr.transition().duration(1000).style("background-color", entailmentColor); 
-                }
-            },
-            {
-                name: "button2",
-                text: "Prediction",
-                click: function() { 
-                    tr.transition().duration(1000).style("background-color", predictionColor); 
-                }
-            },
-            {
-                name: "button3",
-                text: "Accuracy",
-                click: function() { 
-                    tr.transition().duration(1000).style("background-color", function(d){
-                        if (d.prediction === d.entailment){
-                            return 'green'
-                        }else{
-                            return 'red'
-                        }
-                    });
-                }
-            }
-        ];
-
-        values.selectAll("button")
-            .data(buttonList)
-            .enter()
-            .append("button")
-            .attr("id", function(d) { return d.name; })
-            .text(function(d) { return d.text; })
-            .on("click", function(d) {
-                return d.click();
-            });
-        var tb = values.append("table")
-        var tr = tb.selectAll("tr").data(sel).enter().append("tr").style('background-color', entailmentColor).on("click", function(d){
-            d3.selectAll("#np").remove();
-            var enter_s1 = s1.append("g").attr("id", "np").selectAll("circle").data(scores.filter(getPoints.bind(this, d.Sentence))).enter().append("circle");
-            enter_s1.attr("cx", function(d) {
-                return x_scale(d.X);
-            });
-            enter_s1.attr("cy", function(d) {
-                return y_scale(d.Y);
-            });
-            enter_s1.attr("r", 9);
-            enter_s1.attr("fill", function(d){
-                if (d.pos <= sentences[d.Sentence].indexOf('[SEP]'))
-                    return "black";
-                else
-                    return "white";
-            });
-            enter_s1.attr("stroke", "black");
-            enter_s1.on("mouseover", function(d){
-                s1.append("text")
-                .attr("id","word")
-                .attr("x", x_scale(d.X))
-                .attr("y", y_scale(d.Y))
-                .attr("dx", "6") // margin
-                .attr("dy", ".35em") // vertical-align
-                .text(sentences[d.Sentence][d.pos].replace("QUERY", ""));
-            });
-            enter_s1.on("mouseleave", function(d){
-                d3.select("#word").remove();
-            });
-            var enter_s2 = s2.append("g").attr("id", "np").selectAll("circle").data(scores.filter(getPoints.bind(this, d.Sentence))).enter().append("circle");
-            enter_s2.attr("cx", function(d) {
-                return x_scale_2(d.X2);
-            });
-            enter_s2.attr("cy", function(d) {
-                return y_scale_2(d.Y2);
-            });
-            enter_s2.attr("r", 9);
-            enter_s2.attr("fill", function(d){
-                if (d.pos <= sentences[d.Sentence].indexOf('[SEP]'))
-                    return "black";
-                else
-                    return "white";
-            });
-            enter_s2.attr("stroke", "black");
-            enter_s2.on("mouseover", function(d){
-                s2.append("text")
-                .attr("id","word")
-                .attr("x", x_scale_2(d.X2))
-                .attr("y", y_scale_2(d.Y2))
-                .attr("dx", "6") // margin
-                .attr("dy", ".35em") // vertical-align
-                .text(sentences[d.Sentence][d.pos].replace("QUERY", ""));
-            });
-            enter_s2.on("mouseleave", function(d){
-                d3.select("#word").remove();
-            });
-         })
-
-        var td = tr.append("td").attr("id", function(d) { return d.pos; });
-        td.selectAll("span").data(function(d){
-            var s = sentences[d.Sentence];
-            // s[d.pos] = 'QUERY' + s[d.pos];
-
-            return s.map(function(word, i) {
-                return {
-                    word: word,
-                    pos: i,
-                    selectedPos: d.pos
-                };
-            });
-        }).enter().append("span").text(function(d){
-            return d.word + " ";
-            /*if (d != '[CLS]' && d != '[SEP]')
-                return d.replace('QUERY', '') + ' ';*/
-         }).attr('style', function(d, i){
-            if (d.pos === d.selectedPos)
-            //if (d.includes('QUERY'))
-                return 'color:red'
-         });
-    }
+    renderSentences(sel);
 }
 
+var brushEnable = true;
 var previous_b = null;
 var brush_1 = s1.append("g")
     .attr("class", "brush")
     .attr("pointer-events", "all")
+    .on("click", click)
     .call(d3.brush()
         .on("start", start)
-        .on("brush end", brushed))
-    .on("click", click)
-    .call(d3.zoom()
-        .scaleExtent([1, 8])
-        .on("zoom", zoom));;
+        .on("brush end", brushed));
 
 function incircle(p, c) {
     if (Math.pow(p[0] - c[0], 2) + Math.pow(p[1] - c[1], 2) <= 25) {
@@ -351,25 +340,28 @@ function incircle(p, c) {
 function click(d) {
     d = d3.mouse(this);
     enter_s1.classed("selected", d && function(e) {
-        c = [x_scale(e.X), y_scale(e.Y)];
+        c = zoomer.apply([x_scale(e.X), y_scale(e.Y)]);
         return incircle(d, c);
     });
     enter_s2.classed("selected", d && function(e) {
-        c = [x_scale(e.X), y_scale(e.Y)];
+        c = zoomer.apply([x_scale(e.X), y_scale(e.Y)]);
         return incircle(d, c);
     });
     if (d3.selectAll(".selected").size() != 0){
         enter_s1.classed("unselected", d && function(e) {
-            c = [x_scale(e.X), y_scale(e.Y)];
+            c = zoomer.apply([x_scale(e.X), y_scale(e.Y)]);
             return !incircle(d, c);
         });
         enter_s2.classed("unselected", d && function(e) {
-            c = [x_scale(e.X), y_scale(e.Y)];
+            c = zoomer.apply([x_scale(e.X), y_scale(e.Y)]);
             return !incircle(d, c);
         });
         show_TableAndSentence(s1.selectAll(".selected").data());
-    }else
+    }else{
+        enter_s1.attr("class", "true");
+        enter_s2.attr("class", "true");
         show_TableAndSentence(enter_s1.data());
+    }
 }
 
 function start() {
@@ -381,29 +373,18 @@ function start() {
 
 function brushed() {
     var selection = d3.event.selection;
-    // x_d.filter([x_scale.invert(selection[0][0]), x_scale.invert(selection[1][0])]);
-    // y_d.filter([y_scale.invert(selection[0][1]), y_scale.invert(selection[1][1])]);
-    // x_d.top(Infinity).forEach(d => d3.select(d.svgElement).attr("fill", "red"));
-    // x_d.top(Infinity).forEach(d => d3.select(d.svgElement2).attr("fill", "red"));
     enter_s1.classed("selected", selection && function(d) {
-        return selection[0][0] <= x_scale(d.X) && x_scale(d.X) <= selection[1][0] &&
-            selection[0][1] <= y_scale(d.Y) && y_scale(d.Y) <= selection[1][1];
+        return selection[0][0] <= zoomer.applyX(x_scale(d.X)) && zoomer.applyX(x_scale(d.X)) <= selection[1][0] &&
+            selection[0][1] <= zoomer.applyY(y_scale(d.Y)) && zoomer.applyY(y_scale(d.Y)) <= selection[1][1];
     });
-    enter_s1.classed("unselected", selection && function(d) {
-        return !(selection[0][0] <= x_scale(d.X) && x_scale(d.X) <= selection[1][0] &&
-            selection[0][1] <= y_scale(d.Y) && y_scale(d.Y) <= selection[1][1]);
-    })
-    enter_s2.classed("selected", selection && function(d) {
-        return selection[0][0] <= x_scale(d.X) && x_scale(d.X) <= selection[1][0] &&
-            selection[0][1] <= y_scale(d.Y) && y_scale(d.Y) <= selection[1][1];
-    });
-    enter_s2.classed("unselected", selection && function(d) {
-        return !(selection[0][0] <= x_scale(d.X) && x_scale(d.X) <= selection[1][0] &&
-            selection[0][1] <= y_scale(d.Y) && y_scale(d.Y) <= selection[1][1]);
-    });
+    var d = s1.selectAll(".selected").data();
+    enter_s1.classed("selected", d && function(e){ return d.includes(e) });
+    enter_s2.classed("selected", d && function(e){ return d.includes(e) });
+    enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
+    enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
     d3.select("#values").remove();
 
-    show_TableAndSentence(s1.selectAll(".selected").data());    
+    show_TableAndSentence(s1.selectAll(".selected").data()); 
 }
 
 var brush_2 = s2.append("g")
@@ -416,46 +397,41 @@ var brush_2 = s2.append("g")
 function click_2(d) {
     d = d3.mouse(this);
     enter_s2.classed("selected", d && function(e) {
-        c = [x_scale_2(e.X2), y_scale_2(e.Y2)];
+        c = zoomer2.apply([x_scale_2(e.X2), y_scale_2(e.Y2)]);
         return incircle(d, c);
     });
     enter_s1.classed("selected", d && function(e) {
-        c = [x_scale_2(e.X2), y_scale(e.Y2)];
+        c = zoomer2.apply([x_scale_2(e.X2), y_scale(e.Y2)]);
         return incircle(d, c);
     });
-    console.log(d3.selectAll(".selected").size())
     if (d3.selectAll(".selected").size() != 0){
         enter_s1.classed("unselected", d && function(e) {
-            c = [x_scale_2(e.X2), y_scale_2(e.Y2)];
+            c = zoomer2.apply([x_scale_2(e.X2), y_scale_2(e.Y2)]);
             return !incircle(d, c);
         });
         enter_s2.classed("unselected", d && function(e) {
-            c = [x_scale_2(e.X2), y_scale_2(e.Y2)];
+            c = zoomer2.apply([x_scale_2(e.X2), y_scale_2(e.Y2)]);
             return !incircle(d, c);
         });
         show_TableAndSentence(s2.selectAll(".selected").data());
-    }else
+    }else{
+        enter_s1.attr("class", "true");
+        enter_s2.attr("class", "true");
         show_TableAndSentence(enter_s2.data());
+    }
 }
 
 function brushed_2() {
     var selection = d3.event.selection;
     enter_s2.classed("selected", selection && function(d) {
-        return selection[0][0] <= x_scale_2(d.X2) && x_scale_2(d.X2) <= selection[1][0] &&
-            selection[0][1] <= y_scale_2(d.Y2) && y_scale_2(d.Y2) <= selection[1][1];
+        return selection[0][0] <= zoomer2.applyX(x_scale_2(d.X2)) && zoomer2.applyX(x_scale_2(d.X2)) <= selection[1][0] &&
+            selection[0][1] <= zoomer2.applyY(y_scale_2(d.Y2)) && zoomer2.applyY(y_scale_2(d.Y2)) <= selection[1][1];
     });
-    enter_s1.classed("selected", selection && function(d) {
-        return selection[0][0] <= x_scale_2(d.X2) && x_scale_2(d.X2) <= selection[1][0] &&
-            selection[0][1] <= y_scale_2(d.Y2) && y_scale_2(d.Y2) <= selection[1][1];
-    });
-    enter_s2.classed("unselected", selection && function(d) {
-        return !(selection[0][0] <= x_scale_2(d.X2) && x_scale_2(d.X2) <= selection[1][0] &&
-            selection[0][1] <= y_scale_2(d.Y2) && y_scale_2(d.Y2) <= selection[1][1]);
-    });
-    enter_s1.classed("unselected", selection && function(d) {
-        return !(selection[0][0] <= x_scale_2(d.X2) && x_scale_2(d.X2) <= selection[1][0] &&
-            selection[0][1] <= y_scale_2(d.Y2) && y_scale_2(d.Y2) <= selection[1][1]);
-    });    
+    var d = s2.selectAll(".selected").data();
+    enter_s1.classed("selected", d && function(e){ return d.includes(e) });
+    enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
+    enter_s2.classed("selected", d && function(e){ return d.includes(e) });
+    enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
     d3.select("#values").remove();
 
     show_TableAndSentence(s2.selectAll(".selected").data()); 
@@ -466,21 +442,30 @@ var buttonList = [
         name: "button1",
         text: "Entailment",
         click: function() { 
-            enter_s2.transition().duration(1000).attr("stroke", entailmentColor); 
+            // enter_s2.transition().duration(1000).attr("stroke", entailmentColor); 
+            enter_s2.transition().duration(1000).attr("fill", entailmentColor); 
         }
     },
     {
         name: "button2",
         text: "Prediction",
         click: function() { 
-            enter_s2.transition().duration(1000).attr("stroke", predictionColor); 
+            // enter_s2.transition().duration(1000).attr("stroke", predictionColor); 
+            enter_s2.transition().duration(1000).attr("fill", predictionColor); 
         }
     },
     {
         name: "button3",
         text: "Accuracy",
         click: function() { 
-            enter_s2.transition().duration(1000).attr("stroke", function(d){
+            // enter_s2.transition().duration(1000).attr("stroke", function(d){
+            //     if (d.prediction === d.entailment){
+            //         return 'green'
+            //     }else{
+            //         return 'red'
+            //     }
+            // });
+            enter_s2.transition().duration(1000).attr("fill", function(d){
                 if (d.prediction === d.entailment){
                     return 'green'
                 }else{
@@ -507,6 +492,45 @@ function zoom() {
 
 function transform(t) {
   return function(d) {
+    zoomer = t; 
     return "translate(" + t.apply([x_scale(d.X), y_scale(d.Y)]) + ")";
   };
 }
+
+function zoom2() {
+  enter_s2.attr("transform", transform2(d3.event.transform));
+}
+
+function transform2(t) {
+  return function(d) {
+    zoomer2 = t; 
+    return "translate(" + t.apply([x_scale_2(d.X2), y_scale_2(d.Y2)]) + ")";
+  };
+}
+
+d3.select("#main_div").append("button")
+    .attr("id", "enable")
+    .text("zoom/brush")
+    .on("click", function(d) {
+        if (brushEnable){
+            brush_1.call(d3.zoom()
+            .scaleExtent([1, 8])
+            .on("zoom", zoom));
+            brush_1.on('.brush', null);
+            brush_2.call(d3.zoom()
+            .scaleExtent([1, 8])
+            .on("zoom", zoom2));
+            brush_2.on('.brush', null);
+            brushEnable = false;
+        }else{
+            brush_1.on('.zoom', null);
+            brush_1.call(d3.brush()
+            .on("start", start)
+            .on("brush end", brushed));
+            brush_2.on('.zoom', null);
+            brush_2.call(d3.brush()
+            .on("start", start)
+            .on("brush end", brushed_2));
+            brushEnable = true;
+        }
+    });
