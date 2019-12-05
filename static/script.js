@@ -1,3 +1,5 @@
+var search = d3.select("#main_div").append("div");
+
 labels = ["-", "neutral", "contradiction", "entailment"]
 var zoomer  = null;
 var zoomer2 = null;
@@ -22,7 +24,7 @@ function getPoints(x, sent) {
   return sent.Sentence == x;
 }
 
-scores_sample = getRandomSubarray(scores, 1000);
+scores_sample = getRandomSubarray(scores, 5000);
 
 var x_scale = d3.scaleLinear().domain([x0-2, x1+2]).range([25, 475]);
 var y_scale = d3.scaleLinear().domain([y0-2, y1+2]).range([475, 25]);
@@ -72,6 +74,26 @@ var g_y = s2.append("g").attr("transform", "translate(25,0)").call(d3.axisLeft(y
 var g_x = s2.append("g").attr("transform", "translate(0,475)").call(d3.axisBottom(x_scale_2).ticks(9));
 
 show_TableAndSentence(scores_sample);
+
+var form = search.append("form");
+form.append("input").attr("id", "search");
+
+search.append("button").text('search').on("click", function(){
+    var search = d3.select("#search").node().value;
+    enter_s1.classed("selected", search && function(d) {
+        return search == sentences[d.Sentence][d.pos];
+    });
+    enter_s1.classed("unselected", search && function(d) {
+        return search != sentences[d.Sentence][d.pos];
+    });
+    enter_s2.classed("selected", search && function(d) {
+        return search == sentences[d.Sentence][d.pos];
+    });
+    enter_s2.classed("unselected", search && function(d) {
+        return search != sentences[d.Sentence][d.pos];
+    });
+    show_TableAndSentence(s1.selectAll(".selected").data());
+});
 
 function renderSentences(sel){
     if (sel.length > 10)
@@ -209,6 +231,13 @@ function renderSentences(sel){
      });
 }
 
+function selectNode(d){
+    enter_s1.classed("selected", d && function(e){ return d.includes(e) });
+    enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
+    enter_s2.classed("selected", d && function(e){ return d.includes(e) });
+    enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
+}
+
 function show_TableAndSentence(sel){
     d3.selectAll("#classed_node").remove();
     d3.selectAll("#values").remove();
@@ -276,18 +305,41 @@ function show_TableAndSentence(sel){
     var elist = ["entailment", sum_e_n, sum_e_c, sum_e_e]
     d3.select("#counts").remove();
     var tb = d3.select("#main_div").append("div").attr("id", "counts").append("table")
-    tb.append("tr").selectAll("th").data(namelist).enter().append("th").text(function(d){ return d });
+    tb.append("tr").selectAll("th").data(namelist).enter().append("th").text(function(d){ return d }).on("click", function(d, i){
+        switch(i){
+            case 1:
+                selectNode([...sum_c_n,...sum_e_n,...sum_n_n]);
+                renderSentences(s1.selectAll(".selected").data());
+            break;
+            case 2:
+                selectNode([...sum_n_c,...sum_c_c,...sum_e_c]);
+                renderSentences(s1.selectAll(".selected").data());
+            break;
+            case 3:
+                selectNode([...sum_n_e,...sum_c_e,...sum_e_e]);
+                renderSentences(s1.selectAll(".selected").data());
+            break;
+            case 0:
+                enter_s1.attr("class", "true");
+                enter_s2.attr("class", "true");
+                show_TableAndSentence(enter_s1.data());
+                break;
+        }
+    });
     tb.append("tr").selectAll("td").data(nlist).enter().append("td")
         .text(function(d, i){ 
             if (i!=0) 
                 return d.length 
             else 
                 return d })
-        .on("click", function(d){
-            enter_s1.classed("selected", d && function(e){ return d.includes(e) });
-            enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
-            enter_s2.classed("selected", d && function(e){ return d.includes(e) });
-            enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
+        .on("click", function(d, i){
+            switch(i){
+                case 0:
+                    selectNode([...sum_n_n,...sum_n_c,...sum_n_e]);
+                    break;
+                default:
+                    selectNode(d);
+            }
             renderSentences(s1.selectAll(".selected").data());
         });
     tb.append("tr").selectAll("td").data(clist).enter().append("td")
@@ -296,11 +348,14 @@ function show_TableAndSentence(sel){
                 return d.length 
             else 
                 return d })
-        .on("click", function(d){
-            enter_s1.classed("selected", d && function(e){ return d.includes(e) });
-            enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
-            enter_s2.classed("selected", d && function(e){ return d.includes(e) });
-            enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
+        .on("click", function(d, i){
+            switch(i){
+                case 0:
+                    selectNode([...sum_c_n,...sum_c_c,...sum_c_e]);
+                    break;
+                default:
+                    selectNode(d);
+            }
             renderSentences(s1.selectAll(".selected").data());
         });
     tb.append("tr").selectAll("td").data(elist).enter().append("td")
@@ -309,11 +364,14 @@ function show_TableAndSentence(sel){
                 return d.length 
             else 
                 return d })
-        .on("click", function(d){
-            enter_s1.classed("selected", d && function(e){ return d.includes(e) });
-            enter_s1.classed("unselected", d && function(e){ return !d.includes(e) });
-            enter_s2.classed("selected", d && function(e){ return d.includes(e) });
-            enter_s2.classed("unselected", d && function(e){ return !d.includes(e) });
+        .on("click", function(d, i){
+            switch(i){
+                case 0:
+                    selectNode([...sum_e_n,...sum_e_c,...sum_e_e]);
+                    break;
+                default:
+                    selectNode(d);
+            }
             renderSentences(s1.selectAll(".selected").data());
         });
     renderSentences(sel);
