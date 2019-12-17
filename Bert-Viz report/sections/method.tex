@@ -1,0 +1,9 @@
+\section{Method}
+
+We use BERT model provied by pytorch transformers. We first feed all sentence pairs to BERT and get the pre-trained  embeddings for all words in our dataset. 
+
+For SNLI task, we put a feedforward layer on top of the BERT model. We use CrossEntropyLoss as the loss function and feed all sentence pairs to train this model.
+
+After we get the model, we feed the sentence pairs to our model again and extract the fine-tuned BERT embeddings from our model. So we get two set of word vectors.
+
+To visualize the vectors, we use UMAP to map the vectors to 2-d.
