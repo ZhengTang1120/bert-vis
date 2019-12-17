@@ -7,9 +7,9 @@ from utils import *
 from sklearn.cluster import AffinityPropagation
 from collections import defaultdict
 
-(sentences, n_words, word2id, points, vecs) = pickle.load( open( 'temp.p', 'rb' ) )
+(sentences, n_words, word2id, points, vecs) = pickle.load( open( 'save_clso.p', 'rb' ) )
 dev_set = prepare_jldata("snli_1.0/snli_1.0_dev.jsonl")
-(sentences2, n_words2, word2id2, points2) = pickle.load( open( 'save2.p', 'rb' ) )
+(sentences2, n_words2, word2id2, points2, vecs) = pickle.load( open( 'save_cls.p', 'rb' ) )
 with open("predictions.txt") as f:
     predictions = f.read().split('\n')[:-1]
 
@@ -79,7 +79,31 @@ def groupBySent(word2id):
             sents[sid].append((round(float(point[0]),2),round(float(point[1]),2),round(float(point2[0]),2), round(float(point2[1]),2)))
     return sents
 
-sents =  (groupBySent(word2id))
+def get_cls():
+    xs = []
+    ys = []
+    xs2 = []
+    ys2 = []
+    res = []
+    for i, point in enumerate(points):
+        point2 =  points2[i]
+        sentence = sentences[i][:]
+        entailment = dev_set[i][-1]
+        prediction = predictions[i].split()[0]
+        jl = {'X': round(float(point[0]),2), 'Y': round(float(point[1]),2), 'X2': round(float(point2[0]),2), 
+        'Y2': round(float(point2[1]),2), 'entailment':entailment, 'prediction':int(prediction), 
+        'Sentence': i, 'pos':0}
+        xs.append(point[0])
+        ys.append(point[1])
+        xs2.append(point2[0])
+        ys2.append(point2[1])
+        res.append(jl)
+    return {"scores": json.dumps(res), "x0": math.floor(min(xs)), "x1": math.ceil(max(xs)), 
+            "y0": math.floor(min(ys)), "y1": math.ceil(max(ys)),
+            "x02": math.floor(min(xs2)), "x12": math.ceil(max(xs2)), 
+            "y02": math.floor(min(ys2)), "y12": math.ceil(max(ys2))}
+# print (json.dumps(sentences))
+# sents =  (groupBySent(word2id))
 # print (sents)
 # words, centers = pickle.load( open( "centers.p", "rb" ) )
 # print (len(centers))
@@ -103,62 +127,62 @@ sents =  (groupBySent(word2id))
 #     words += [query for i in cluster_centers_indices]
 
 # pickle.dump((words, centers), open( "centers.p", "wb" ) )
-# res = get_result2(word2id)
-# with open("static/all.js", "w") as f:
-#     f.write("var scores = ")
-#     f.write(res["scores"])
-#     f.write(";\n")
-#     f.write("var x0 = ")
-#     f.write(str(res["x0"]))
-#     f.write(";\n")
-#     f.write("var x1 = ")
-#     f.write(str(res["x1"]))
-#     f.write(";\n")
-#     f.write("var y0 = ")
-#     f.write(str(res["y0"]))
-#     f.write(";\n")
-#     f.write("var y1 = ")
-#     f.write(str(res["y1"]))
-#     f.write(";\n")
-#     f.write("var x02 = ")
-#     f.write(str(res["x02"]))
-#     f.write(";\n")
-#     f.write("var x12 = ")
-#     f.write(str(res["x12"]))
-#     f.write(";\n")
-#     f.write("var y02 = ")
-#     f.write(str(res["y02"]))
-#     f.write(";\n")
-#     f.write("var y12 = ")
-#     f.write(str(res["y12"]))
-#     f.write(";\n")
-for word in word2id:
-    res = get_result(word, sents)
-    with open("static/words2/%s.js"%word, "w") as f:
-        f.write("var scores = ")
-        f.write(res["scores"])
-        f.write(";\n")
-        f.write("var x0 = ")
-        f.write(str(res["x0"]))
-        f.write(";\n")
-        f.write("var x1 = ")
-        f.write(str(res["x1"]))
-        f.write(";\n")
-        f.write("var y0 = ")
-        f.write(str(res["y0"]))
-        f.write(";\n")
-        f.write("var y1 = ")
-        f.write(str(res["y1"]))
-        f.write(";\n")
-        f.write("var x02 = ")
-        f.write(str(res["x02"]))
-        f.write(";\n")
-        f.write("var x12 = ")
-        f.write(str(res["x12"]))
-        f.write(";\n")
-        f.write("var y02 = ")
-        f.write(str(res["y02"]))
-        f.write(";\n")
-        f.write("var y12 = ")
-        f.write(str(res["y12"]))
-        f.write(";\n")
+res = get_cls()
+with open("static/cls.js", "w") as f:
+    f.write("var scores = ")
+    f.write(res["scores"])
+    f.write(";\n")
+    f.write("var x0 = ")
+    f.write(str(res["x0"]))
+    f.write(";\n")
+    f.write("var x1 = ")
+    f.write(str(res["x1"]))
+    f.write(";\n")
+    f.write("var y0 = ")
+    f.write(str(res["y0"]))
+    f.write(";\n")
+    f.write("var y1 = ")
+    f.write(str(res["y1"]))
+    f.write(";\n")
+    f.write("var x02 = ")
+    f.write(str(res["x02"]))
+    f.write(";\n")
+    f.write("var x12 = ")
+    f.write(str(res["x12"]))
+    f.write(";\n")
+    f.write("var y02 = ")
+    f.write(str(res["y02"]))
+    f.write(";\n")
+    f.write("var y12 = ")
+    f.write(str(res["y12"]))
+    f.write(";\n")
+# for word in word2id:
+#     res = get_result(word, sents)
+#     with open("static/words2/%s.js"%word, "w") as f:
+#         f.write("var scores = ")
+#         f.write(res["scores"])
+#         f.write(";\n")
+#         f.write("var x0 = ")
+#         f.write(str(res["x0"]))
+#         f.write(";\n")
+#         f.write("var x1 = ")
+#         f.write(str(res["x1"]))
+#         f.write(";\n")
+#         f.write("var y0 = ")
+#         f.write(str(res["y0"]))
+#         f.write(";\n")
+#         f.write("var y1 = ")
+#         f.write(str(res["y1"]))
+#         f.write(";\n")
+#         f.write("var x02 = ")
+#         f.write(str(res["x02"]))
+#         f.write(";\n")
+#         f.write("var x12 = ")
+#         f.write(str(res["x12"]))
+#         f.write(";\n")
+#         f.write("var y02 = ")
+#         f.write(str(res["y02"]))
+#         f.write(";\n")
+#         f.write("var y12 = ")
+#         f.write(str(res["y12"]))
+#         f.write(";\n")

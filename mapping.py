@@ -35,31 +35,31 @@ if __name__ == '__main__':
     bert.eval()
 
     for i, (premise, hypothesis, cls) in enumerate(dev_set):
-        # premise = '[CLS] '+ premise + ' [SEP]'
-        # hypothesis = hypothesis + ' [SEP]'
+        premise = '[CLS] '+ premise + ' [SEP]'
+        hypothesis = hypothesis + ' [SEP]'
 
         output = model(premise, hypothesis)
-        print (output.argmax(0).cpu().numpy(), cls)
 
-        # tokenized_premise = tokenizer.tokenize(premise)
-        # tokenized_hypothesis = tokenizer.tokenize(hypothesis)
-        # tokenized_text = tokenized_premise + tokenized_hypothesis
-        # sentences.append(tokenized_text)
+        tokenized_premise = tokenizer.tokenize(premise)
+        tokenized_hypothesis = tokenizer.tokenize(hypothesis)
+        tokenized_text = tokenized_premise + tokenized_hypothesis
+        sentences.append(tokenized_text)
 
-        # for j, w in enumerate(tokenized_text):
-        #     word2id[w].append((n_words, i, j))
-        #     n_words += 1
+        for j, w in enumerate(tokenized_text):
+            word2id[w].append((n_words, i, j))
+            n_words += 1
 
-        # indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
-        # segments_ids = [0 for i in tokenized_premise] + [1 for i in tokenized_hypothesis]
+        indexed_tokens = tokenizer.convert_tokens_to_ids(tokenized_text)
+        segments_ids = [0 for i in tokenized_premise] + [1 for i in tokenized_hypothesis]
 
-        # tokens_tensor = torch.tensor([indexed_tokens]).to(device)
-        # segments_tensors = torch.tensor([segments_ids]).to(device)
-        # bert_output = bert(tokens_tensor, token_type_ids=segments_tensors)
-        # if i == 0:
-        #     vecs = bert_output[0].data.cpu().numpy()[0]
-        # else:
-        #     vecs = np.concatenate((vecs, bert_output[0].data.cpu().numpy()[0]), axis=0)
+        tokens_tensor = torch.tensor([indexed_tokens]).to(device)
+        segments_tensors = torch.tensor([segments_ids]).to(device)
+        bert_output = bert(tokens_tensor, token_type_ids=segments_tensors)
+        print (bert_output.size())
+        if i == 0:
+            vecs = bert_output[0].data.cpu().numpy()[0]
+        else:
+            vecs = np.concatenate((vecs, bert_output[0].data.cpu().numpy()[0]), axis=0)
     # points = umap.UMAP().fit_transform(vecs)
 
     # print (len(points), n_words)
@@ -85,4 +85,4 @@ if __name__ == '__main__':
     # print (len(points), n_words)
 
     # pickle.dump((sentences, n_words, word2id, points, vecs), open( args.output, "wb" ) )
-    # (sentences, n_words, word2id, points) = pickle.load( open( "save.p", "rb" ) )
+    # (sentences, n_words, word2id, points) = pickle.load( open( "save_cls.p", "rb" ) )
