@@ -149,13 +149,8 @@ function renderSentences(sel){
     var tr = tb.selectAll("tr").data(sel).enter().append("tr").style('background-color', entailmentColor).on("click", function(d){
         d3.selectAll("#np").remove();
         if (!clicked){
-            var enter_s1 = s1.append("g").attr("id", "np").selectAll("circle").data(scores.filter(getPoints.bind(this, d.Sentence))).enter().append("circle");
-            enter_s1.attr("cx", function(d) {
-                return x_scale(d.X);
-            });
-            enter_s1.attr("cy", function(d) {
-                return y_scale(d.Y);
-            });
+            var enter_s1 = s1.append("g").attr("id", "np").selectAll("circle").data(scores.filter(getPoints.bind(this, d.Sentence))).enter().append("circle").attr("class", "np1");
+            enter_s1.attr("transform", transform(d3.zoomIdentity))
             enter_s1.attr("r", 9);
             enter_s1.attr("fill", function(d){
                 if (d.pos <= sentences[d.Sentence].indexOf('[SEP]'))
@@ -167,8 +162,8 @@ function renderSentences(sel){
             enter_s1.on("mouseover", function(d){
                 s1.append("text")
                 .attr("id","word")
-                .attr("x", x_scale(d.X))
-                .attr("y", y_scale(d.Y))
+                .attr("x", zoomer.applyX(x_scale(d.X)))
+                .attr("y", zoomer.applyY(y_scale(d.Y)))
                 .attr("dx", "6") // margin
                 .attr("dy", ".35em") // vertical-align
                 .text(sentences[d.Sentence][d.pos].replace("QUERY", ""));
@@ -176,13 +171,8 @@ function renderSentences(sel){
             enter_s1.on("mouseleave", function(d){
                 d3.select("#word").remove();
             });
-            var enter_s2 = s2.append("g").attr("id", "np").selectAll("circle").data(scores.filter(getPoints.bind(this, d.Sentence))).enter().append("circle");
-            enter_s2.attr("cx", function(d) {
-                return x_scale_2(d.X2);
-            });
-            enter_s2.attr("cy", function(d) {
-                return y_scale_2(d.Y2);
-            });
+            var enter_s2 = s2.append("g").attr("id", "np").selectAll("circle").data(scores.filter(getPoints.bind(this, d.Sentence))).enter().append("circle").attr("class", "np2");
+            enter_s2.attr("transform", transform2(d3.zoomIdentity))
             enter_s2.attr("r", 9);
             enter_s2.attr("fill", function(d){
                 if (d.pos <= sentences[d.Sentence].indexOf('[SEP]'))
@@ -194,8 +184,8 @@ function renderSentences(sel){
             enter_s2.on("mouseover", function(d){
                 s2.append("text")
                 .attr("id","word")
-                .attr("x", x_scale_2(d.X2))
-                .attr("y", y_scale_2(d.Y2))
+                .attr("x", zoomer2.applyX(x_scale_2(d.X2)))
+                .attr("y", zoomer2.applyY(y_scale_2(d.Y2)))
                 .attr("dx", "6") // margin
                 .attr("dy", ".35em") // vertical-align
                 .text(sentences[d.Sentence][d.pos].replace("QUERY", ""));
@@ -546,6 +536,7 @@ div2.selectAll("button")
 
 function zoom() {
   enter_s1.attr("transform", transform(d3.event.transform));
+  d3.selectAll(".np1").attr("transform", transform(d3.event.transform));
 }
 
 function transform(t) {
@@ -557,6 +548,7 @@ function transform(t) {
 
 function zoom2() {
   enter_s2.attr("transform", transform2(d3.event.transform));
+  d3.selectAll(".np2").attr("transform", transform2(d3.event.transform));
 }
 
 function transform2(t) {
