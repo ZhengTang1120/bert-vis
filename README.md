@@ -3,8 +3,10 @@
 
 ## Train:
 
-`python train.py [trainning_data_dir] [development_data_dir] `
+`python train.py `
 
-## Test:
+## Run UI:
 
-`python test.py [model] [trainning_data_dir] [testing_data_dir]`
+`python main.py `
+
+And UI will be shown in http://127.0.0.1:5000/
